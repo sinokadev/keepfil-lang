@@ -1,4 +1,6 @@
-let int asdf = 5 
-let str b = "tesT"
+func addtwo(a, b){
+    return a + b
+}
 
-print(b + asdf)
+print(123)
+print(addtwo(3, 5))

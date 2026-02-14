@@ -1,21 +1,60 @@
 from parser import *
 
+class ReturnException(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
 class Environment:
-    def __init__(self, p: Parser):
+    def __init__(self, parent=None):
         self.variables = {}
-        self.funcs = {
-            "print": lambda *args: print(*args)  # 임시 구현
-        }
+        self.funcs = {}
+        self.parent = parent
+    
+    def get_variable(self, name):
+        if name in self.variables:
+            return self.variables[name]
+        elif self.parent:
+            return self.parent.get_variable(name)
+        else:
+            raise RuntimeError(f"Undefined variable: {name}")
 
-        self.p: Parser = p
-    
-        self.now_ast = self.p.parse_line()
-    
-    def eval_let(self):
-        name = self.now_ast["name"]
-        value_ast = self.now_ast["value"]["expr"]  # 여기서 expr만 가져옴
+    def get_function(self, name):
+        if name in self.funcs:
+            return self.funcs[name]
+        elif self.parent:
+            return self.parent.get_function(name)
+        else:
+            raise RuntimeError(f"Undefined function: {name}")
+
+
+
+    def eval_call(self, ast):
+        func_name = ast["name"]
+        args = [self.eval_expr(arg) for arg in ast["args"]]
+
+        func = self.get_function(func_name)
+
+        if callable(func):
+            return func(*args)
+
+        local_env = Environment(parent=self)
+
+        for param, arg in zip(func["params"], args):
+            local_env.variables[param] = arg
+
+        try:
+            for stmt in func["body"]:
+                local_env.eval_line(stmt)
+        except ReturnException as r:
+            return r.value
+
+        return None
+
+    def eval_let(self, node):
+        name = node["name"]
+        value_ast = node["value"]["expr"]
         self.variables[name] = self.eval_expr(value_ast)
-
 
     def eval_expr(self, ast):
         t = ast["type"]
@@ -25,11 +64,7 @@ class Environment:
         elif t == "string":
             return ast["value"]
         elif t == "variable":
-            name = ast["value"]
-            if name in self.variables:
-                return self.variables[name]
-            else:
-                raise RuntimeError(f"Undefined variable: {name}")
+            return self.get_variable(ast["value"])
         elif t == "unary":
             op = ast["operator"]
             val = self.eval_expr(ast["operand"])
@@ -50,32 +85,28 @@ class Environment:
             elif op == "/":
                 return left / right
         elif t == "call":
-            func_name = ast["name"]
-            args = [self.eval_expr(arg) for arg in ast["args"]]
+            return self.eval_call(ast)
 
-            # print는 예약어 처리
-            if func_name == "print":
-                print(*args)
-                return None
+    def eval_line(self, node):
+        t = node["type"]
 
-            if func_name in self.funcs:
-                func = self.funcs[func_name]
-                return func(*args)
-            else:
-                raise RuntimeError(f"Undefined function: {func_name}")
+        if t == "let":
+            self.eval_let(node)
 
+        elif t == "call":
+            self.eval_expr(node)
 
-    def eval_line(self):
-        if self.now_ast is None:
-            return False
-
-        if self.now_ast["type"] == "let":
-            self.eval_let()
-        elif self.now_ast["type"] == "call":
-            self.eval_expr(self.now_ast)
+        elif t == "func":
+            # 함수 정의는 저장만
+            self.funcs[node["name"]] = node
         
-        ast = self.p.parse_line()
-        if ast == None:
-            return False
-        self.now_ast = ast
-        return True
+        elif t == "return":
+            value = None
+            if node["expr"] is not None:
+                value = self.eval_expr(node["expr"])
+            raise ReturnException(value)
+
+    
+    def eval_program(self, ast_list):
+        for node in ast_list:
+            self.eval_line(node)

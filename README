@@ -14,7 +14,15 @@ python3 main.py main.kep
 
 -----[TODO List]-----
 1. REPL
-2. 함수 정의 문법
+2. 함수 정의 문법 (완료)
 3. for, if
 4. (가능하다면) struct
 5. 언어 철학 세우기
+
+-----[함수 정의 문법]-----
+
+func foo(bar){
+    return bar + 5
+}
+
+제작하며 ChatGPT와 eval을 싹 갈아엎었다.

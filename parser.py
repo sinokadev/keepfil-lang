@@ -1,6 +1,7 @@
 from tokens import *
 from lexer import *
 from enum import IntEnum, auto
+import json
 
 class Precedence(IntEnum):
     LOWEST = 1
@@ -48,7 +49,7 @@ class Parser:
             raise SyntaxError("Expected '=' after variable name")
         result["token"].append(self.now_token)
 
-        # 표현식 (현재는 placeholder)
+        # 표현식
         self.get_next_token()
         expression = self.parse_expression()
         result["value"]["expr"] = expression
@@ -110,6 +111,70 @@ class Parser:
 
         return left
 
+    def parse_func(self):
+        self.get_next_token()
+        func_name = self.now_token.value
+        params = []
+        body = []
+
+        self.get_next_token()
+        if self.now_token.type != LPAREN:
+            raise SyntaxError(f"Unexpected token {self.now_token.type}")
+        
+        self.get_next_token() # RPAREN or LITER
+
+        if self.now_token.type != RPAREN:
+            while True:
+                if self.now_token.type != LITER:
+                    raise SyntaxError(f"Unexpected token {self.now_token.type}")
+                
+                params.append(self.now_token.value)
+                
+                self.get_next_token() # 콤마
+
+                if self.now_token.type == COMMA:
+                    self.get_next_token() # 파라미터 LITER
+                    continue
+                elif self.now_token.type == RPAREN:
+                    break
+                else:
+                    raise SyntaxError("Expected ',' or ')'")
+        
+        self.get_next_token() # RPAREN 소비
+
+        # body 파싱
+        if self.now_token.type != LBRACE:
+            raise SyntaxError(f"Unexpected token {self.now_token.type}")
+
+        body = self.parse_block()
+
+        return {"type": "func", "name": func_name, "params": params, "body": body}
+
+    def parse_return(self):
+        self.get_next_token()
+
+        # return 다음이 줄 끝 or } 이면 값 없는 return
+        if self.now_token.type in (NEWLINE, RBRACE):
+            return {"type": "return", "expr": None}
+
+        expr = self.parse_expression()
+        return {"type": "return", "expr": expr}
+
+
+    def parse_block(self):
+        body = []
+
+        self.get_next_token()  # '{' 다음 토큰
+
+        while self.now_token.type != RBRACE:
+            stmt = self.parse_line()
+            body.append(stmt)
+            self.get_next_token()
+
+        # 여기서 now_token == RBRACE
+        self.get_next_token() # RBRACE 소비
+        return body
+
 
     def get_next_token(self):
         self.now_token = self.next_token
@@ -127,6 +192,10 @@ class Parser:
         if self.now_token.type == LITER:
             if self.now_token.value == "let":
                 result = self.let_parse()
+            elif self.now_token.value == "func":
+                result = self.parse_func()
+            elif self.now_token.value == "return":
+                result = self.parse_return()
             else:
                 # 변수 또는 함수 호출 같은 일반 표현식
                 result = self.parse_expression()
@@ -136,16 +205,25 @@ class Parser:
 
         return result
 
+    def parse_program(self):
+        nodes = []
+        while True:
+            node = self.parse_line()
+            if node is None:
+                break
+            nodes.append(node)
+        return nodes
+
+
 if __name__ == "__main__":
     code = """
-    let int myvar = 52
-    print(\"My Way\")
-    print(myvar + 52)
+func addtwo(a, b){
+    print(a+b)
+}
     """
 
     lexer = Lexer(code)
     parser = Parser(lexer)
 
-    print(parser.parse_line())
-    print(parser.parse_line())
-    print(parser.parse_line())
+    ast = parser.parse_line()
+    print(json.dumps(ast, indent=4))

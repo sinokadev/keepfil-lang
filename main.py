@@ -3,16 +3,23 @@ from parser import Parser
 from lexer import Lexer
 from evaluation import Environment
 
+
 def run_file(filename):
     with open(filename, "r", encoding="utf-8") as f:
         code = f.read()
 
     lexer = Lexer(code)
     parser = Parser(lexer)
-    env = Environment(parser)
 
-    while env.eval_line():
-        pass
+    ast = parser.parse_program()
+    env = Environment()
+    env.funcs["print"] = lambda *args: print(*args)
+    env.eval_program(ast)
+
+    print(ast)
+
+
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

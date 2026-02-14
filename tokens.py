@@ -13,6 +13,8 @@ SLASH = "SLASH"
 NUMBER = "NUMBER"
 NEWLINE = "NEWLINE"
 COMMA = "COMMA"
+LBRACE = "LBRACE"
+RBRACE = "RBRACE"
 
 class Token:
     def __init__(self, type_, value=None):

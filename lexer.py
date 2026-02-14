@@ -66,6 +66,10 @@ class Lexer:
                 tok = Token(LPAREN, self.reading)
             case ")":
                 tok = Token(RPAREN, self.reading)
+            case "{":
+                tok = Token(LBRACE, self.reading)
+            case "}":
+                tok = Token(RBRACE, self.reading)
             case "=":
                 tok = Token(ASSIGN, self.reading)
             case "+":
@@ -78,11 +82,11 @@ class Lexer:
                 tok = Token(SLASH, self.reading)
             case ",":
                 tok = Token(COMMA, self.reading)
+                
             case None:
                 return Token(EOF, self.reading)
             case "\n":
                 tok = Token(NEWLINE, self.reading)
-            
             case "\"":
                 tok = self.str_lexing()
             case _:
