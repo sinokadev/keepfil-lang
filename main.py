@@ -23,7 +23,7 @@ def run_file(filename):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python3 run.py <filename>")
+        print("Usage: python3 main.py <filename>")
         sys.exit(1)
 
     run_file(sys.argv[1])
