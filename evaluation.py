@@ -130,6 +130,11 @@ class Environment:
             elif node.get("else"):
                 for stmt in node["else"]:
                     self.eval_line(stmt)
+        elif t == "for":
+            while self.eval_expr(node["condition"]):
+                for stmt in node["body"]:
+                    self.eval_line(stmt)
+
         else:
             # 타입이 이상하거나 변수 단독일 때도 eval_expr로 검사
             self.eval_expr(node)

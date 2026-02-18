@@ -211,6 +211,23 @@ class Parser:
                 "else": else_body
             }
 
+    def parse_for(self):
+        self.get_next_token()  # for 키워드 소비
+
+        # 조건식 파싱
+        condition = self.parse_expression()
+
+        # body 파싱
+        if self.now_token.type != LBRACE:
+            raise SyntaxError(f"Expected '{{' after for condition, got {self.now_token.type}")
+
+        body = self.parse_block()
+
+        return {
+            "type": "for",
+            "condition": condition,
+            "body": body
+        }
 
     def parse_block(self):
         body = []
@@ -263,6 +280,8 @@ class Parser:
                 result = self.parse_return()
             elif self.now_token.value == "if":
                 result = self.parse_if()
+            elif self.now_token.value == "for":
+                result = self.parse_for()
             else:
                 # 변수 또는 함수 호출 같은 일반 표현식
                 result = self.parse_expression()
