@@ -1,6 +1,6 @@
-func (a, b){
+func addtwo(a, b){
     return a + b
 }
 
-print(123)
-print(addtwo(3, 5))
+print(false)
+print(addtwo(3, 5) == 8)

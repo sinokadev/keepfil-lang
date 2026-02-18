@@ -5,11 +5,14 @@ import json
 
 class Precedence(IntEnum):
     LOWEST = 1
-    SUM = 2       # +, -
-    PRODUCT = 3   # *, /
-    PREFIX = 4    # -x, !x
+    EQUALS = 2      # ==, !=
+    LESSGREATER = 3 # <, >, <=, >=
+    SUM = 4         # +, -
+    PRODUCT = 5     # *, /
+    PREFIX = 6
 
-KEYWORDS = {"let", "func", "return", "from", "in"}
+
+KEYWORDS = {"let", "func", "return", "from", "in", "false", "true"}
 TYPES = {"int", "str", "bool"}
 
 
@@ -56,12 +59,17 @@ class Parser:
         return result
 
     def current_precedence(self):
-        if self.now_token.type in (PLUS, MINUS):
+        if self.now_token.type in (EQ, NEQ):
+            return Precedence.EQUALS
+        elif self.now_token.type in (LT, GT, LTE, GTE):
+            return Precedence.LESSGREATER
+        elif self.now_token.type in (PLUS, MINUS):
             return Precedence.SUM
         elif self.now_token.type in (STAR, SLASH):
             return Precedence.PRODUCT
         else:
             return Precedence.LOWEST
+
 
     def parse_call(self, function_name):
         self.get_next_token()
@@ -85,11 +93,20 @@ class Parser:
             self.get_next_token()
             left = {"type": "number", "value": token.value}
         elif token.type == LITER:
-            self.get_next_token()
-            if self.now_token.type == LPAREN: # call
-                left = self.parse_call(token.value)
-            else: # var
-                left = {"type": "variable", "value": token.value}
+            if token.value == "true":
+                self.get_next_token()
+                left = {"type": "bool", "value": True}
+
+            elif token.value == "false":
+                self.get_next_token()
+                left = {"type": "bool", "value": False}
+
+            else:
+                self.get_next_token()
+                if self.now_token.type == LPAREN:  # call
+                    left = self.parse_call(token.value)
+                else:  # variable
+                    left = {"type": "variable", "value": token.value}
         elif token.type == STR:
             self.get_next_token()
             left = {"type": "string", "value": token.value}

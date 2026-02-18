@@ -4,7 +4,6 @@ class ReturnException(Exception):
     def __init__(self, value):
         self.value = value
 
-
 class Environment:
     def __init__(self, parent=None):
         self.variables = {}
@@ -84,8 +83,23 @@ class Environment:
                 return left * right
             elif op == "/":
                 return left / right
+            elif op == "==":
+                return left == right
+            elif op == "!=":
+                return left != right
+            elif op == "<":
+                return left < right
+            elif op == ">":
+                return left > right
+            elif op == "<=":
+                return left <= right
+            elif op == ">=":
+                return left >= right
         elif t == "call":
             return self.eval_call(ast)
+        elif t == "bool":
+            return ast["value"]
+
 
     def eval_line(self, node):
         t = node["type"]

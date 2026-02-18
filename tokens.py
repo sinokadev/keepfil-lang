@@ -16,6 +16,14 @@ COMMA = "COMMA"
 LBRACE = "LBRACE"
 RBRACE = "RBRACE"
 
+EQ = "EQ"        # ==
+NEQ = "NEQ"      # !=
+LT = "LT"        # <
+GT = "GT"        # >
+LTE = "LTE"      # <=
+GTE = "GTE"      # >=
+
+
 class Token:
     def __init__(self, type_, value=None):
         self.type = type_

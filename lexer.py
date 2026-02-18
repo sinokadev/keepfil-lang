@@ -54,6 +54,12 @@ class Lexer:
             self.read_text()
 
         return Token(NUMBER, number)
+    
+    def peek_char(self):
+        if self.next_pos >= len(self.code):
+            return None
+        return self.code[self.next_pos]
+
 
     def return_token(self):
         tok = None
@@ -71,7 +77,34 @@ class Lexer:
             case "}":
                 tok = Token(RBRACE, self.reading)
             case "=":
-                tok = Token(ASSIGN, self.reading)
+                if self.peek_char() == "=":
+                    ch = self.reading
+                    self.read_text()
+                    tok = Token(EQ, ch + self.reading)
+                else:
+                    tok = Token(ASSIGN, self.reading)
+            case "!":
+                if self.peek_char() == "=":
+                    ch = self.reading
+                    self.read_text()
+                    tok = Token(NEQ, ch + self.reading)
+                else:
+                    tok = Token(IDK, self.reading)
+            case "<":
+                if self.peek_char() == "=":
+                    ch = self.reading
+                    self.read_text()
+                    tok = Token(LTE, ch + self.reading)
+                else:
+                    tok = Token(LT, self.reading)
+
+            case ">":
+                if self.peek_char() == "=":
+                    ch = self.reading
+                    self.read_text()
+                    tok = Token(GTE, ch + self.reading)
+                else:
+                    tok = Token(GT, self.reading)
             case "+":
                 tok = Token(PLUS, self.reading)
             case "*":
@@ -106,6 +139,9 @@ if __name__ == "__main__":
     code = """
 let asdf = 5
 let b = "tesT"
+
+asdf == 5
+
 """
     lexer = Lexer(code)
     tokens = []
