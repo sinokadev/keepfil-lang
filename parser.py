@@ -258,10 +258,8 @@ class Parser:
 
     def is_keyword(self):
         return self.now_token.type == LITER and self.now_token.value in KEYWORDS
-
+    
     def parse_line(self):
-        result = None
-
         while self.now_token.type == NEWLINE:
             self.get_next_token()
         
@@ -271,25 +269,39 @@ class Parser:
         if self.now_token.type == RBRACE:
             return "BLOCK_END"
 
+        # LITER 토큰 처리
         if self.now_token.type == LITER:
+            # 키워드 처리
             if self.now_token.value == "let":
-                result = self.parse_let()
+                return self.parse_let()
             elif self.now_token.value == "func":
-                result = self.parse_func()
+                return self.parse_func()
             elif self.now_token.value == "return":
-                result = self.parse_return()
+                return self.parse_return()
             elif self.now_token.value == "if":
-                result = self.parse_if()
+                return self.parse_if()
             elif self.now_token.value == "for":
-                result = self.parse_for()
+                return self.parse_for()
+            
+            # let 아닌 기존 변수에 = 있을 때
+            if self.next_token.type == ASSIGN:
+                target_name = self.now_token.value
+                self.get_next_token()  # '=' 토큰 소비
+                self.get_next_token()  # '=' 다음 표현식 시작
+                value_expr = self.parse_expression()
+                return {
+                    "type": "assign",
+                    "target": target_name,
+                    "value": value_expr
+                }
             else:
-                # 변수 또는 함수 호출 같은 일반 표현식
-                result = self.parse_expression()
+                # 함수 호출 또는 단순 변수 표현식
+                return self.parse_expression()
+
         else:
             # 숫자, unary 등 다른 표현식
-            result = self.parse_expression()
+            return self.parse_expression()
 
-        return result
 
     def parse_program(self):
         nodes = []

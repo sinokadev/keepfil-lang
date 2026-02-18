@@ -103,6 +103,16 @@ class Environment:
         elif t == "bool":
             return ast["value"]
 
+    def eval_assign(self, node):
+        name = node["target"]
+        if name in self.variables:
+            self.variables[name] = self.eval_expr(node["value"])
+        elif self.parent:
+            # 부모 환경에도 있는지 체크
+            self.parent.eval_assign(node)
+        else:
+            raise RuntimeError(f"Cannot assign to undefined variable '{name}'")
+
 
     def eval_line(self, node):
         t = node["type"]
@@ -134,6 +144,8 @@ class Environment:
             while self.eval_expr(node["condition"]):
                 for stmt in node["body"]:
                     self.eval_line(stmt)
+        elif t == "assign":
+            self.eval_assign(node)
 
         else:
             # 타입이 이상하거나 변수 단독일 때도 eval_expr로 검사
