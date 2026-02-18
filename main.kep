@@ -1,6 +1,7 @@
-func addtwo(a, b){
-    return a + b
+if 5 == 5 {
+    print("five is five")
+} else {
+    print("five is not five")
+} else if 55 == 5{
+    print("fivefive is five")
 }
-
-print(false)
-print(addtwo(3, 5) == 8)

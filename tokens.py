@@ -23,6 +23,8 @@ GT = "GT"        # >
 LTE = "LTE"      # <=
 GTE = "GTE"      # >=
 
+KEYWORDS = {"let", "func", "return", "from", "in", "false", "true", "if", "else"}
+TYPES = {"int", "str", "bool"}
 
 class Token:
     def __init__(self, type_, value=None):

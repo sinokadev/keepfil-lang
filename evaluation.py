@@ -1,4 +1,4 @@
-from parser import *
+from tokens import *
 
 class ReturnException(Exception):
     def __init__(self, value):
@@ -62,8 +62,11 @@ class Environment:
             return int(ast["value"])
         elif t == "string":
             return ast["value"]
-        elif t == "variable":
+        if t == "variable":
+            if ast["value"] in KEYWORDS:
+                raise RuntimeError(f"Invalid variable name '{ast['value']}': reserved keyword")
             return self.get_variable(ast["value"])
+
         elif t == "unary":
             op = ast["operator"]
             val = self.eval_expr(ast["operand"])
@@ -119,6 +122,17 @@ class Environment:
             if node["expr"] is not None:
                 value = self.eval_expr(node["expr"])
             raise ReturnException(value)
+        elif t == "if":
+            cond = self.eval_expr(node["condition"])
+            if cond:
+                for stmt in node["then"]:
+                    self.eval_line(stmt)
+            elif node.get("else"):
+                for stmt in node["else"]:
+                    self.eval_line(stmt)
+        else:
+            # 타입이 이상하거나 변수 단독일 때도 eval_expr로 검사
+            self.eval_expr(node)
 
     
     def eval_program(self, ast_list):

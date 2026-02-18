@@ -12,10 +12,6 @@ class Precedence(IntEnum):
     PREFIX = 6
 
 
-KEYWORDS = {"let", "func", "return", "from", "in", "false", "true"}
-TYPES = {"int", "str", "bool"}
-
-
 class Parser:
     def __init__(self, l: Lexer):
         self.l: Lexer = l
@@ -25,7 +21,7 @@ class Parser:
         self.get_next_token()
         self.get_next_token()
 
-    def let_parse(self):
+    def parse_let(self):
         result = {
             "type": "let",
             "name": "",
@@ -186,21 +182,57 @@ class Parser:
 
         expr = self.parse_expression()
         return {"type": "return", "expr": expr}
+    
+    def parse_if(self):
+        self.get_next_token() # if 소비
+        condition = self.parse_expression() # 표현식 소비
+
+        # then body
+        if self.now_token.type == LBRACE:
+            then_body = self.parse_block()
+        else:
+            then_body = [self.parse_line()]
+
+        else_body = None
+
+        # else 체크
+        if self.now_token.type == LITER and self.now_token.value == "else":
+            self.get_next_token()
+
+            if self.now_token.type == LBRACE:
+                else_body = self.parse_block()
+            else:
+                else_body = [self.parse_line()]
+
+            return {
+                "type": "if",
+                "condition": condition,
+                "then": then_body,
+                "else": else_body
+            }
 
 
     def parse_block(self):
         body = []
 
-        self.get_next_token()  # '{' 다음 토큰
+        if self.now_token.type != LBRACE:
+            raise SyntaxError(f"Expected '{{', got {self.now_token.type}")
 
-        while self.now_token.type != RBRACE:
+        self.get_next_token()  # '{' 소비
+
+        while True:
             stmt = self.parse_line()
-            body.append(stmt)
-            self.get_next_token()
 
-        # 여기서 now_token == RBRACE
-        self.get_next_token() # RBRACE 소비
+            if stmt == "BLOCK_END":  # RBRACE 신호
+                break
+
+            if stmt is not None:
+                body.append(stmt)
+
+        self.get_next_token()  # '}' 소비
         return body
+
+
 
 
     def get_next_token(self):
@@ -218,14 +250,19 @@ class Parser:
         
         if self.now_token.type == EOF:
             return None
+        
+        if self.now_token.type == RBRACE:
+            return "BLOCK_END"
 
         if self.now_token.type == LITER:
             if self.now_token.value == "let":
-                result = self.let_parse()
+                result = self.parse_let()
             elif self.now_token.value == "func":
                 result = self.parse_func()
             elif self.now_token.value == "return":
                 result = self.parse_return()
+            elif self.now_token.value == "if":
+                result = self.parse_if()
             else:
                 # 변수 또는 함수 호출 같은 일반 표현식
                 result = self.parse_expression()
@@ -247,8 +284,12 @@ class Parser:
 
 if __name__ == "__main__":
     code = """
-func addtwo(a, b){
-    print(a+b)
+if 5 == 5 {
+    print("five is five")
+} else {
+    print("five is not five")
+} else if 55 == 5{
+    print("fivefive is five")
 }
     """
 
