@@ -9,10 +9,8 @@ class Precedence(IntEnum):
     PRODUCT = 3   # *, /
     PREFIX = 4    # -x, !x
 
-
-class Expression:
-    def __init__(self):
-        pass
+KEYWORDS = {"let", "func", "return", "from", "in"}
+TYPES = {"int", "str", "bool"}
 
 
 class Parser:
@@ -35,11 +33,26 @@ class Parser:
 
         # 타입
         self.get_next_token()
+
+        if self.now_token.type != LITER:
+            raise SyntaxError(f"Unexpected token {self.now_token.type}")
+
+        if self.is_keyword():
+            raise SyntaxError("Invalid datatype: keyword is not allowed.")
+
         result["datatype"] = self.now_token.value
         result["token"].append(self.now_token)
 
+
         # 변수 이름
         self.get_next_token()
+        
+        if self.now_token.type != LITER:
+            raise SyntaxError(f"Unexpected token {self.now_token.type}")
+
+        if self.is_keyword():
+            raise SyntaxError("Invalid variable name: keyword is not allowed.")
+        
         result["name"] = self.now_token.value
         result["token"].append(self.now_token)
 
@@ -113,6 +126,13 @@ class Parser:
 
     def parse_func(self):
         self.get_next_token()
+
+        if self.now_token.type != LITER:
+            raise SyntaxError("Expected function name")
+
+        if self.is_keyword():
+            raise SyntaxError("Invalid function name: keyword is not allowed.")
+
         func_name = self.now_token.value
         params = []
         body = []
@@ -127,18 +147,22 @@ class Parser:
             while True:
                 if self.now_token.type != LITER:
                     raise SyntaxError(f"Unexpected token {self.now_token.type}")
-                
+
+                if self.is_keyword():
+                    raise SyntaxError("Invalid parameter name: keyword is not allowed.")
+
                 params.append(self.now_token.value)
-                
-                self.get_next_token() # 콤마
+
+                self.get_next_token()
 
                 if self.now_token.type == COMMA:
-                    self.get_next_token() # 파라미터 LITER
+                    self.get_next_token()
                     continue
                 elif self.now_token.type == RPAREN:
                     break
                 else:
                     raise SyntaxError("Expected ',' or ')'")
+
         
         self.get_next_token() # RPAREN 소비
 
@@ -179,6 +203,9 @@ class Parser:
     def get_next_token(self):
         self.now_token = self.next_token
         self.next_token = self.l.return_token()
+
+    def is_keyword(self):
+        return self.now_token.type == LITER and self.now_token.value in KEYWORDS
 
     def parse_line(self):
         result = None

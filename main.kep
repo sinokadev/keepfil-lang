@@ -1,4 +1,4 @@
-func addtwo(a, b){
+func (a, b){
     return a + b
 }
 
