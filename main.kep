@@ -1,7 +1,2 @@
-if 5 == 5 {
-    print("five is five")
-} else {
-    print("five is not five")
-} else if 55 == 5{
-    print("fivefive is five")
-}
+# 이것은 주석입니다.
+let var = "text"

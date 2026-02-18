@@ -67,6 +67,12 @@ class Lexer:
         while self.reading and self.reading.isspace() and self.reading != "\n":
             self.read_text()
 
+        if self.reading == "#":
+            while self.reading and self.reading != "\n":
+                self.read_text()
+            # 다음 토큰 처리
+            return self.return_token()
+
         match self.reading:
             case "(":
                 tok = Token(LPAREN, self.reading)
