@@ -104,8 +104,8 @@ class Lexer:
 
 if __name__ == "__main__":
     code = """
-let int asdf = 5
-let str b = "tesT"
+let asdf = 5
+let b = "tesT"
 """
     lexer = Lexer(code)
     tokens = []

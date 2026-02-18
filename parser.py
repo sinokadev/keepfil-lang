@@ -26,23 +26,9 @@ class Parser:
         result = {
             "type": "let",
             "name": "",
-            "datatype": "",
             "value": {"expr": None}, # 표현식 파싱은 나중에
             "token": [self.now_token.value]
         }
-
-        # 타입
-        self.get_next_token()
-
-        if self.now_token.type != LITER:
-            raise SyntaxError(f"Unexpected token {self.now_token.type}")
-
-        if self.is_keyword():
-            raise SyntaxError("Invalid datatype: keyword is not allowed.")
-
-        result["datatype"] = self.now_token.value
-        result["token"].append(self.now_token)
-
 
         # 변수 이름
         self.get_next_token()
